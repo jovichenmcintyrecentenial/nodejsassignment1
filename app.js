@@ -10,25 +10,40 @@ var server = restify.createServer({name: SERVER_NAME})
 
 server.listen(PORT, HOST, function (){
   console.log('Server %s listening at %s', server.name, server.url)
+  console.log('Endpoints:')
+  console.log('%s:%s/%s methods:(GET, POST, DELETE)',HOST,PORT,'images')  
 
 })
+
+function _showArgsError(next,errorMessage){
+  console.log('POST /images: error '+errorMessage)
+  return next(new restify.InvalidArgumentError(errorMessage))
+}
+
+function _logRequest(method, param){
+  console.log('%s /images: received request '+JSON.stringify(param,null, 2),method)
+
+}
+
+function _logResponse(method, body){
+  console.log('%s /images: response sent '+JSON.stringify(body,null, 2),method)
+}
 
 server.use(restify.fullResponse()).use(restify.bodyParser())
 
 server.post('/images', function(req, res,next){
-  console.log('POST /images')
-
+  _logRequest('POST',req.params)
   if(req.params.imageId === undefined){
-    return next(new restify.InvalidArgumentError('imageId is not specified'))
+    return _showArgsError(next, 'imageId is not specified')
   }
   else if(req.params.name === undefined){
-    return next(new restify.InvalidArgumentError('name is not specified'))
+    return _showArgsError(next, 'name is not specified')
   }
   else if(req.params.url === undefined){
-    return next(new restify.InvalidArgumentError('url is not specified'))
+    return _showArgsError(next, 'url is not specified')
   }
   else if(req.params.size === undefined){
-    return next(new restify.InvalidArgumentError('size is not specified'))
+    return _showArgsError(next, 'size is not specified')
   }
 
   var newImage = {
@@ -40,15 +55,21 @@ server.post('/images', function(req, res,next){
 
   imageStore.create(newImage, function(error, image){
 
-    if(error) next(restify.InvalidArgumentError(JSON.stringify(error.errors)))
+ 
+    if(error) { 
+      var errorMessage = "unable to create new record for image"
+      console.log('POST /images: error '+errorMessage)
+      next(500, restify.InternalError(errorMessage))
+    }
 
+    _logResponse('POST',newImage)
     res.send(201,image)
   })
 })
 
 server.get('/images',function(req,res,next){
 
-  console.log('GET /images')
+  console.log('GET /images received request')
 
   imageStore.find({},function(error, images){
     res.send(images)
