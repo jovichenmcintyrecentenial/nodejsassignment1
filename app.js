@@ -24,6 +24,15 @@ function _showArgsError(next,errorMessage){
 }
 
 function _logRequest(method, param){
+
+  if(method == 'POST'){
+    postCounter++
+  }
+  if(method == 'GET'){
+    getCounter++
+  }
+
+  console.log('Processed Request Count: GET:%s POST:%s',getCounter,postCounter)
   console.log('%s /images: received request '+JSON.stringify(param,null, 2),method)
 }
 
@@ -34,7 +43,6 @@ function _logResponse(method, body){
 server.use(restify.fullResponse()).use(restify.bodyParser())
 
 server.post('/images', function(req, res,next){
-  postCounter++
   _logRequest('POST',req.params)
   if(req.params.imageId === undefined){
     return _showArgsError(next, 'imageId is not specified')
@@ -69,7 +77,6 @@ server.post('/images', function(req, res,next){
 })
 
 server.get('/images',function(req,res,next){
-  getCounter++;
   _logRequest('GET',req.params)
 
   imageStore.find({},function(error, images){
