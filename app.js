@@ -5,6 +5,9 @@ var HOST = '127.0.0.1'
 var restify = require('restify')
 var imageStore = require('save')('images')
 
+var postCounter = 0
+var getCounter = 0
+
 var server = restify.createServer({name: SERVER_NAME})
 
 
@@ -22,7 +25,6 @@ function _showArgsError(next,errorMessage){
 
 function _logRequest(method, param){
   console.log('%s /images: received request '+JSON.stringify(param,null, 2),method)
-
 }
 
 function _logResponse(method, body){
@@ -32,6 +34,7 @@ function _logResponse(method, body){
 server.use(restify.fullResponse()).use(restify.bodyParser())
 
 server.post('/images', function(req, res,next){
+  postCounter++
   _logRequest('POST',req.params)
   if(req.params.imageId === undefined){
     return _showArgsError(next, 'imageId is not specified')
@@ -55,11 +58,9 @@ server.post('/images', function(req, res,next){
 
   imageStore.create(newImage, function(error, image){
 
- 
     if(error) { 
-      var errorMessage = "unable to create new record for image"
-      console.log('POST /images: error '+errorMessage)
-      next(500, restify.InternalError(errorMessage))
+      console.log('POST /images: error '+JSON.stringify(error.errors))
+      next(restify.InternalError("unable to create new record for image"))
     }
 
     _logResponse('POST',newImage)
@@ -68,14 +69,17 @@ server.post('/images', function(req, res,next){
 })
 
 server.get('/images',function(req,res,next){
-
-  console.log('GET /images received request')
+  getCounter++;
+  _logRequest('GET',req.params)
 
   imageStore.find({},function(error, images){
+   
+    if(error) { 
+      console.log('POST /images: error '+JSON.stringify(error.errors))
+      next(restify.InternalError("unable to get images"))
+    }
+    _logResponse('GET',images)
     res.send(images)
   })
 })
 
-server.get('/images', function(req, res,next){
-
-})
