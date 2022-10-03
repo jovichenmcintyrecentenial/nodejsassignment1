@@ -13,3 +13,48 @@ server.listen(PORT, HOST, function (){
 
 })
 
+server.use(restify.fullResponse()).use(restify.bodyParser())
+
+server.post('/images', function(req, res,next){
+  console.log('POST /images')
+
+  if(req.params.imageId === undefined){
+    return next(new restify.InvalidArgumentError('imageId is not specified'))
+  }
+  else if(req.params.name === undefined){
+    return next(new restify.InvalidArgumentError('name is not specified'))
+  }
+  else if(req.params.url === undefined){
+    return next(new restify.InvalidArgumentError('url is not specified'))
+  }
+  else if(req.params.size === undefined){
+    return next(new restify.InvalidArgumentError('size is not specified'))
+  }
+
+  var newImage = {
+    imageId : req.params.imageId,
+    name: req.params.name,
+    url: req.params.url,
+    size: req.params.size
+  }
+
+  imageStore.create(newImage, function(error, image){
+
+    if(error) next(restify.InvalidArgumentError(JSON.stringify(error.errors)))
+
+    res.send(201,image)
+  })
+})
+
+server.get('/images',function(req,res,next){
+
+  console.log('GET /images')
+
+  imageStore.find({},function(error, images){
+    res.send(images)
+  })
+})
+
+server.get('/images', function(req, res,next){
+
+})
