@@ -18,6 +18,8 @@ server.listen(PORT, HOST, function (){
 
 })
 
+server.use(restify.fullResponse()).use(restify.bodyParser())
+
 function _showArgsError(next,errorMessage){
   console.log('POST /images: error '+errorMessage)
   return next(new restify.InvalidArgumentError(errorMessage))
@@ -40,7 +42,8 @@ function _logResponse(method, body){
   console.log('%s /images: response sent '+JSON.stringify(body,null, 2),method)
 }
 
-server.use(restify.fullResponse()).use(restify.bodyParser())
+
+
 
 server.post('/images', function(req, res,next){
   _logRequest('POST',req.params)
@@ -74,6 +77,16 @@ server.post('/images', function(req, res,next){
     _logResponse('POST',newImage)
     res.send(201,image)
   })
+})
+
+
+server.del('/images',function(req,res,next){
+  _logRequest('POST',req.params)
+  imageStore.deleteMany({},function(){
+
+  })
+  _logResponse('DELETE',[])
+  res.send()
 })
 
 server.get('/images',function(req,res,next){
